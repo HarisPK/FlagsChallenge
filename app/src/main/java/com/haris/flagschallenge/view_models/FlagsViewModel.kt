@@ -12,7 +12,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.util.*
-import java.util.logging.Logger
 
 class FlagsViewModel(private val repository: FlagsRepository) : ViewModel() {
 
@@ -21,9 +20,6 @@ class FlagsViewModel(private val repository: FlagsRepository) : ViewModel() {
 
     private val _scheduledTime = MutableStateFlow<Long?>(null)
     val scheduledTime: StateFlow<Long?> = _scheduledTime.asStateFlow()
-
-    private val _countdownTime = MutableStateFlow(0)
-    val countdownTime: StateFlow<Int> = _countdownTime.asStateFlow()
 
     private var questions: List<Question> = emptyList()
     private var currentScore = 0
@@ -41,9 +37,21 @@ class FlagsViewModel(private val repository: FlagsRepository) : ViewModel() {
         }
     }
 
-    fun scheduleChallenge(timeInMillis: Long) {
-        _scheduledTime.value = timeInMillis
-        startCountdownTimer(timeInMillis)
+    fun scheduleChallenge(hours: Int, minutes: Int, seconds: Int) {
+        val calendar = Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, hours)
+            set(Calendar.MINUTE, minutes)
+            set(Calendar.SECOND, seconds)
+            set(Calendar.MILLISECOND, 0)
+
+            // If the time is in the past, schedule for tomorrow
+            if (timeInMillis < System.currentTimeMillis()) {
+                add(Calendar.DAY_OF_YEAR, 1)
+            }
+        }
+
+        _scheduledTime.value = calendar.timeInMillis
+        startCountdownTimer(calendar.timeInMillis)
     }
 
     private fun startCountdownTimer(targetTime: Long) {
@@ -52,15 +60,14 @@ class FlagsViewModel(private val repository: FlagsRepository) : ViewModel() {
             while (true) {
                 val currentTime = System.currentTimeMillis()
                 val timeRemaining = ((targetTime - currentTime) / 1000).toInt()
-                Logger.getLogger("FlagsViewModel").info("Time remaining: $timeRemaining seconds")
+
                 when {
                     timeRemaining <= 0 -> {
                         startChallenge()
                         break
                     }
                     timeRemaining <= 20 -> {
-                        _gameState.value = GameState.Countdown
-                        _countdownTime.value = timeRemaining
+                        _gameState.value = GameState.Countdown(timeRemaining)
                     }
                 }
                 delay(1000)
@@ -85,14 +92,16 @@ class FlagsViewModel(private val repository: FlagsRepository) : ViewModel() {
             val currentState = _gameState.value as? GameState.InProgress ?: return@launch
             var timeRemaining = 30
 
-            while (timeRemaining > 0) {
+            while (timeRemaining > 0 && !currentState.showResult) {
                 _gameState.value = currentState.copy(timeRemaining = timeRemaining)
                 delay(1000)
                 timeRemaining--
             }
 
-            // Time's up, show result
-            showQuestionResult()
+            // Time's up, show result if not already showing
+            if (!currentState.showResult) {
+                showQuestionResult()
+            }
         }
     }
 
@@ -168,7 +177,6 @@ class FlagsViewModel(private val repository: FlagsRepository) : ViewModel() {
         currentScore = 0
         _gameState.value = GameState.Initial
         _scheduledTime.value = null
-        _countdownTime.value = 0
     }
 
     fun getQuestion(index: Int): Question? {

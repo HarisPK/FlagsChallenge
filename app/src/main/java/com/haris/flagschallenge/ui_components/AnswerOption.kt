@@ -9,73 +9,73 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil.compose.AsyncImage
 import com.haris.flagschallenge.models.Country
 
 @Composable
 fun AnswerOption(
     country: Country,
     isSelected: Boolean,
-    isCorrect: Boolean,
-    showResult: Boolean,
-    onClick: () -> Unit
+    isCorrect: Boolean?,
+    isWrong: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val backgroundColor = when {
-        showResult && isCorrect -> Color.Green.copy(alpha = 0.3f)
-        showResult && isSelected && !isCorrect -> Color.Red.copy(alpha = 0.3f)
-        isSelected -> MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
-        else -> MaterialTheme.colorScheme.surface
+        isCorrect == true -> Color(0xFF4CAF50) // Green for correct
+        isWrong -> Color(0xFFF44336) // Red for wrong selection
+        isSelected -> Color(0xFFE65100) // Orange for selected
+        else -> Color.White
     }
 
-    val borderColor = when {
-        showResult && isCorrect -> Color.Green
-        showResult && isSelected && !isCorrect -> Color.Red
-        isSelected -> MaterialTheme.colorScheme.primary
-        else -> MaterialTheme.colorScheme.outline
+    val textColor = when {
+        isCorrect == true || isWrong || isSelected -> Color.White
+        else -> Color.Black
     }
 
     Column {
-        Card(
-            modifier = Modifier
+        Box(
+            modifier = modifier
                 .fillMaxWidth()
-                .clickable { onClick() }
-                .border(2.dp, borderColor, RoundedCornerShape(8.dp)),
-            colors = CardDefaults.cardColors(containerColor = backgroundColor)
+                .height(48.dp)
+                .background(backgroundColor, RoundedCornerShape(4.dp))
+                .border(
+                    1.dp,
+                    if (backgroundColor == Color.White) Color.Gray else backgroundColor,
+                    RoundedCornerShape(4.dp)
+                )
+                .clickable { onClick() },
+            contentAlignment = Alignment.Center
         ) {
             Text(
                 text = country.country_name,
-                modifier = Modifier.padding(16.dp),
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Medium
+                color = textColor,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Medium,
+                modifier = Modifier.padding(horizontal = 8.dp)
             )
         }
 
-        // Result text
-        if (showResult) {
-            when {
-                isCorrect -> {
-                    Text(
-                        text = "Correct",
-                        color = Color.Green,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(start = 16.dp, top = 4.dp)
-                    )
-                }
-                isSelected && !isCorrect -> {
-                    Text(
-                        text = "Wrong",
-                        color = Color.Red,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(start = 16.dp, top = 4.dp)
-                    )
-                }
-            }
+        // Show result text
+        if (isCorrect == true) {
+            Text(
+                text = "Correct",
+                color = Color(0xFF4CAF50),
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(top = 4.dp)
+            )
+        } else if (isWrong) {
+            Text(
+                text = "Wrong",
+                color = Color(0xFFF44336),
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(top = 4.dp)
+            )
         }
     }
 }

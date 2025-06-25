@@ -2,7 +2,7 @@ package com.haris.flagschallenge.sealed_classes
 
 sealed class GameState {
     object Initial : GameState()
-    object Countdown : GameState()
+    data class Countdown(val timeRemaining: Int) : GameState()
     data class InProgress(
         val currentQuestionIndex: Int,
         val timeRemaining: Int,

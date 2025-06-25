@@ -5,7 +5,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 
 private val LightColorScheme = lightColorScheme(
-    primary = Color(0xFF6200EE),
+    primary = Color(0xFFE65100),
     secondary = Color(0xFF03DAC6),
     tertiary = Color(0xFF018786)
 )
@@ -18,14 +18,9 @@ private val DarkColorScheme = darkColorScheme(
 
 @Composable
 fun FlagsChallengeTheme(
-    darkTheme: Boolean = false,
     content: @Composable () -> Unit
 ) {
-    val colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme
-
     MaterialTheme(
-        colorScheme = colorScheme,
-        typography = Typography(),
         content = content
     )
 }

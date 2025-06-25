@@ -1,11 +1,11 @@
 package com.haris.flagschallenge.ui_components
 
 import androidx.compose.runtime.*
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import com.haris.flagschallenge.sealed_classes.GameState
 import com.haris.flagschallenge.view_models.FlagsViewModel
+import androidx.compose.ui.platform.LocalLifecycleOwner
 
 @Composable
 fun FlagsChallengeApp(viewModel: FlagsViewModel) {
@@ -35,14 +35,14 @@ fun FlagsChallengeApp(viewModel: FlagsViewModel) {
     when (gameState) {
         is GameState.Initial -> {
             InitialScreen(
-                onScheduleChallenge = { timeInMillis ->
-                    viewModel.scheduleChallenge(timeInMillis)
+                onScheduleChallenge = { hours, minutes, seconds ->
+                    viewModel.scheduleChallenge(hours, minutes, seconds)
                 }
             )
         }
         is GameState.Countdown -> {
             CountdownScreen(
-                countdownTime = viewModel.countdownTime.collectAsState().value
+                countdownTime = (gameState as GameState.Countdown).timeRemaining
             )
         }
         is GameState.InProgress -> {
@@ -52,17 +52,15 @@ fun FlagsChallengeApp(viewModel: FlagsViewModel) {
             )
         }
         is GameState.QuestionInterval -> {
-            val intervalState = gameState as GameState.QuestionInterval
             IntervalScreen(
-                nextQuestionIndex = intervalState.nextQuestionIndex,
-                timeRemaining = intervalState.timeRemaining
+                nextQuestionIndex = (gameState as GameState.QuestionInterval).nextQuestionIndex,
+                timeRemaining = (gameState as GameState.QuestionInterval).timeRemaining
             )
         }
         is GameState.GameOver -> {
-            val gameOverState = gameState as GameState.GameOver
             GameOverScreen(
-                score = gameOverState.score,
-                totalQuestions = gameOverState.totalQuestions,
+                score = (gameState as GameState.GameOver).score,
+                totalQuestions = (gameState as GameState.GameOver).totalQuestions,
                 onRestart = { viewModel.resetGame() }
             )
         }
